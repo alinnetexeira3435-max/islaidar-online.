@@ -1,0 +1,165 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>ISLAIDAR ONLINE · Lobby</title>
+<style>
+:root{--bg:#070b1a;--cy:#19e6ff;--mg:#ff2e88;--gd:#ffc933;--tx:#eaf6ff;--pn:rgba(10,16,38,.78)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;height:100%;background:var(--bg);overflow:hidden;color:var(--tx);font-family:system-ui,"Segoe UI",Roboto,sans-serif}
+canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none}
+.ui{position:fixed;z-index:3}
+#top{top:0;left:0;right:0;padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:linear-gradient(#070b1aee,transparent)}
+.chip{background:var(--pn);border:1px solid #19e6ff44;border-radius:10px;padding:5px 10px;font-weight:700;font-size:13px;white-space:nowrap}
+#prof{display:flex;flex-direction:column;gap:3px;min-width:150px}
+#nm{font-size:15px}
+.xp{height:6px;border-radius:4px;background:#ffffff22;overflow:hidden}.xp i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cy),var(--mg));transition:width .6s}
+#rank{border-color:var(--gd);color:var(--gd)}
+#net{margin-left:auto;font-size:12px;opacity:.9}#net b{display:inline-block;width:8px;height:8px;border-radius:50%;background:#f44;margin-right:5px}#net.on b{background:#3f6}
+#menu{right:calc(env(safe-area-inset-right,0px) + 10px);top:96px;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);width:46%;max-width:210px;display:flex;flex-direction:column;gap:7px;overflow:auto;touch-action:pan-y}
+.btn{border:1px solid #19e6ff66;background:linear-gradient(100deg,#0c1c3c,#162a5c);color:var(--tx);font:800 14px system-ui;letter-spacing:1px;padding:11px 12px;border-radius:12px;text-align:left;position:relative;overflow:hidden;transition:transform .12s,box-shadow .2s}
+.btn:active{transform:scale(.95);box-shadow:0 0 18px var(--cy)}
+.btn.sel{border-color:var(--gd);box-shadow:0 0 14px #ffc93388}
+.btn:focus-visible,.go:focus-visible{outline:2px solid var(--gd)}
+.btn:after,.go:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at var(--x,50%) var(--y,50%),#fff8,transparent 45%);opacity:0;transition:opacity .4s}
+.btn.rip:after,.go.rip:after{opacity:1;transition:none}
+#play{right:calc(env(safe-area-inset-right,0px) + 10px);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);width:46%;max-width:210px}
+.go{width:100%;font:900 22px system-ui;letter-spacing:3px;padding:16px;border:0;border-radius:16px;color:#1a0a00;background:linear-gradient(100deg,var(--gd),#ff8a1f);position:relative;overflow:hidden;animation:pulse 2s infinite}
+.go:active{transform:scale(.95)}
+.go small{display:block;font:700 11px system-ui;letter-spacing:1px;opacity:.75}
+@keyframes pulse{50%{box-shadow:0 0 22px #ffc933aa}}
+#team{left:calc(env(safe-area-inset-left,0px) + 10px);top:96px;width:44%;max-width:200px;display:flex;flex-direction:column;gap:6px}
+.slot{background:var(--pn);border:1px dashed #19e6ff55;border-radius:10px;padding:7px 9px;font-size:13px;font-weight:600;min-height:34px}
+.slot.f{border-style:solid;border-color:var(--mg)}
+#chat{left:calc(env(safe-area-inset-left,0px) + 10px);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);width:48%;max-width:260px;background:var(--pn);border-radius:12px;padding:6px}
+#log{height:64px;overflow:auto;font-size:12px;touch-action:pan-y}#log p{margin:0 0 2px}
+#chat form{display:flex;gap:4px}
+input{flex:1;min-width:0;background:#0007;border:1px solid #19e6ff55;border-radius:8px;color:var(--tx);padding:7px;font-size:14px;user-select:text}
+#chat button{border:0;border-radius:8px;background:var(--cy);font-weight:800;padding:0 10px}
+#modal{position:fixed;inset:0;z-index:10;background:#030612cc;display:none;align-items:center;justify-content:center;padding:14px}
+#box{background:#0a1228;border:1px solid var(--cy);border-radius:16px;width:100%;max-width:440px;max-height:86%;overflow:auto;padding:16px;box-shadow:0 0 30px #19e6ff44}
+#box h2{margin:0 0 10px;font-size:20px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #ffffff14;font-size:14px}
+.row .btn{padding:7px 12px;font-size:12px}
+.pb{height:6px;background:#ffffff22;border-radius:4px;overflow:hidden;margin-top:4px}.pb i{display:block;height:100%;background:var(--cy)}
+#toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:var(--gd);color:#1a0a00;font-weight:800;padding:8px 16px;border-radius:20px;z-index:12;opacity:0;transition:opacity .3s;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.go{animation:none}}
+</style></head><body>
+<canvas id="c"></canvas>
+<div class="ui" id="top">
+ <div class="chip" id="prof"><span id="nm"></span><div class="xp"><i id="xpb"></i></div><small id="lv"></small></div>
+ <div class="chip" id="coins"></div><div class="chip" id="dia"></div>
+ <button class="chip btn" id="rank" style="padding:5px 10px"></button>
+ <div id="net"><b></b><span>Offline</span></div>
+</div>
+<div class="ui" id="team"></div>
+<div class="ui" id="menu"></div>
+<div class="ui" id="play"><button class="go" id="go">JOGAR<small id="modeLbl">Clássico</small></button></div>
+<div class="ui" id="chat"><div id="log"></div><form id="cf"><input id="ci" maxlength="120" placeholder="Chat da equipe" autocomplete="off"><button>Enviar</button></form></div>
+<div id="modal"><div id="box"></div></div><div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+/* ===== CONFIGURAÇÃO — ajuste ao seu servidor ===== */
+const SERVER_URL=location.origin;   // URL do servidor socket.io do ISLAIDAR ONLINE
+const GAME_URL='index.html';        // página do jogo (recebe ?modo=...)
+/* Dentro do jogo o lobby reutiliza o socket do index.html (join-room, room-state...).
+   Amigos, equipe e chat precisam do arquivo server-lobby.js no servidor.
+   Eventos usados (adapte os nomes se o servidor usar outros):
+   emite: lobby-join, friend-add, team-invite, team-chat, team-leave
+   recebe: friends-state {friends:[{id,name,online}]}, team-update {members:[{id,name}]}, team-chat {name,text} */
+const $=id=>document.getElementById(id),V=(x,y,z)=>new THREE.Vector3(x,y,z);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let P=null;try{if(parent!==window)P=parent.__islaidar||null}catch(e){}
+const RANKS=[['Bronze',0,'#cd7f32'],['Prata',100,'#c0c8d4'],['Ouro',250,'#ffc933'],['Platina',450,'#6ff0d8'],['Diamante',700,'#19e6ff'],['Mestre',1000,'#c070ff'],['Desafiante',1400,'#ff2e88']];
+const SKINS=[{id:'neon',n:'Neon Ciano',b:0x19e6ff,a:0xff2e88,p:0},{id:'solar',n:'Solar',b:0xffc933,a:0xff5a1f,p:300},{id:'sombra',n:'Sombra',b:0x2a2f4a,a:0xc070ff,p:500},{id:'floresta',n:'Floresta',b:0x3fbf5a,a:0xd7ff4a,p:400}];
+const GUNS=[{n:'Fuzil de Assalto',l:1.1,c:0x30384f},{n:'Sniper',l:1.7,c:0x1d2a44},{n:'Escopeta',l:.8,c:0x4a3a30}];
+const MODES={jogar:'Clássico',ranqueada:'Ranqueada',classico:'Clássico',treinamento:'Treinamento'};
+const ld=()=>{try{return JSON.parse(localStorage.getItem('islaidar')||'{}')}catch(e){return{}}};
+const S=Object.assign({nome:'Jogador'+(100+Math.random()*900|0),xp:0,coins:500,dia:20,pts:0,kills:0,assists:0,partidas:0,vitorias:0,skin:'neon',owned:['neon'],gun:0,cofre:0,modo:'classico'},ld());
+const save=()=>{try{localStorage.setItem('islaidar',JSON.stringify(S))}catch(e){}};
+/* Dentro do jogo, patente e estatísticas vêm do próprio jogo (localStorage) */
+function sync(){if(!P)return;try{const t=JSON.parse(localStorage.getItem('islaidar_stats')||'{}');S.pts=+localStorage.getItem('islaidar_rank_points')||0;S.kills=t.kills||0;S.partidas=t.partidas||0;S.vitorias=t.vitorias||0;S.xp=t.xp||0}catch(e){}}
+sync();
+const lvl=()=>1+Math.floor(S.xp/200);
+const rankOf=()=>{let r=RANKS[0];for(const x of RANKS)if(S.pts>=x[1])r=x;return r};
+/* Pontos de patente: cada eliminação = 10, assistência = 5 (chame ao fim da partida) */
+window.islaidarRegistrar=(k,a,venceu)=>{S.kills+=k;S.assists+=a;S.pts+=k*10+a*5;S.xp+=k*20+a*10+(venceu?100:20);S.partidas++;if(venceu)S.vitorias++;save();hud()};
+function toast(t){const e=$('toast');e.textContent=t;e.style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.opacity=0,1800)}
+function hud(){sync();const r=rankOf(),n=RANKS[RANKS.indexOf(r)+1];$('nm').textContent=S.nome;$('lv').textContent='Nível '+lvl()+' · '+(S.xp%200)+'/200 XP';$('xpb').style.width=(S.xp%200)/2+'%';
+$('coins').textContent='🪙 '+S.coins;$('dia').textContent='💎 '+S.dia;$('rank').textContent=r[0]+' · '+S.pts+' pts';$('rank').style.color=r[2];$('rank').style.borderColor=r[2];$('modeLbl').textContent=MODES[S.modo]}
+/* ===== Modais ===== */
+function modal(h){$('box').innerHTML=h+'<div class="row" style="border:0"><button class="btn" data-x style="margin-left:auto">FECHAR</button></div>';$('modal').style.display='flex';$('box').querySelector('[data-x]').onclick=()=>$('modal').style.display='none'}
+$('modal').addEventListener('pointerdown',e=>{if(e.target.id==='modal')$('modal').style.display='none'});
+const bar=(p)=>'<div class="pb"><i style="width:'+Math.min(100,p)+'%"></i></div>';
+const PANELS={
+ personagem(){modal('<h2>Personagem</h2>'+SKINS.map(s=>'<div class="row"><span>'+s.n+'</span>'+(S.owned.includes(s.id)?'<button class="btn '+(S.skin===s.id?'sel':'')+'" data-skin="'+s.id+'">'+(S.skin===s.id?'EM USO':'USAR')+'</button>':'<span>🔒 loja</span>')+'</div>').join('')+'<h2 style="margin-top:12px">Armas</h2>'+GUNS.map((g,i)=>'<div class="row"><span>'+g.n+'</span><button class="btn '+(S.gun===i?'sel':'')+'" data-gun="'+i+'">VER</button></div>').join('')+'<div class="row"><span>Comemoração</span><button class="btn" data-win>VITÓRIA</button></div>');
+  document.querySelectorAll('[data-skin]').forEach(b=>b.onclick=()=>{S.skin=b.dataset.skin;save();paint();PANELS.personagem()});document.querySelectorAll('[data-gun]').forEach(b=>b.onclick=()=>{S.gun=+b.dataset.gun;save();gun();PANELS.personagem()});document.querySelector('[data-win]').onclick=()=>{$('modal').style.display='none';victory()}},
+ loja(){modal('<h2>Loja</h2>'+SKINS.map(s=>'<div class="row"><span>'+s.n+'</span>'+(S.owned.includes(s.id)?'<span>✔ sua</span>':'<button class="btn" data-buy="'+s.id+'">🪙 '+s.p+'</button>')+'</div>').join('')+'<div class="row"><span>Pacote 100 💎 (demonstração)</span><span>em breve</span></div>');
+  document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const s=SKINS.find(x=>x.id===b.dataset.buy);if(S.coins<s.p)return toast('Moedas insuficientes');S.coins-=s.p;S.owned.push(s.id);save();hud();toast(s.n+' comprada!');PANELS.loja()})},
+ cofre(){const ok=Date.now()-S.cofre>864e5;modal('<h2>Cofre</h2><p>Abra um cofre grátis a cada 24 horas.</p><button class="btn" data-open '+(ok?'':'disabled style="opacity:.5"')+'>'+(ok?'ABRIR COFRE':'Volte amanhã')+'</button>');const b=document.querySelector('[data-open]');b.onclick=()=>{if(!ok)return;const c=100+(Math.random()*200|0),d=Math.random()<.3?5:0;S.coins+=c;S.dia+=d;S.cofre=Date.now();save();hud();PANELS.cofre();toast('+'+c+' 🪙'+(d?' +'+d+' 💎':''))}},
+ eventos(){modal('<h2>Eventos</h2><div class="row"><span><b>Fim de semana em dobro</b><br><small>XP em dobro nas partidas ranqueadas</small></span></div><div class="row"><span><b>Temporada 1</b><br><small>Chegue a Ouro para ganhar uma skin</small></span></div>')},
+ missoes(){const M=[['Elimine 10 jogadores',S.kills,10],['Jogue 5 partidas',S.partidas,5],['Vença 1 partida',S.vitorias,1],['Alcance Ouro',S.pts,250]];modal('<h2>Missões</h2>'+M.map(m=>'<div class="row" style="display:block"><b>'+m[0]+'</b> <small>'+Math.min(m[1],m[2])+'/'+m[2]+'</small>'+bar(m[1]/m[2]*100)+'</div>').join(''))},
+ conta(){const A=P&&P.auth&&P.auth(),I=A&&A.info();modal('<h2>'+esc(S.nome)+'</h2>'+[['Nível',lvl()],['Eliminações',S.kills],['Assistências',S.assists],['Partidas',S.partidas],['Vitórias',S.vitorias],['Patente',rankOf()[0]+' ('+S.pts+' pts)']].map(r=>'<div class="row"><span>'+r[0]+'</span><b>'+r[1]+'</b></div>').join('')+'<div class="row"><span>Nome</span><button class="btn" data-name>ALTERAR</button></div>'+(P?'<div class="row"><span>Assistência de mira</span><button class="btn" data-aim>'+(P.aim()?'LIGADA':'DESLIGADA')+'</button></div>':'')+(I?'<div class="row"><span>ID da conta</span><b>'+esc(I.id)+'</b></div><div class="row"><span>Conta</span><b>'+I.tipo+'</b></div>'+(I.google?'':'<div class="row"><span>Salvar progresso</span><button class="btn" data-lk>VINCULAR</button></div>')+'<div class="row"><button class="btn" data-out>SAIR DA CONTA</button></div>':'')+'<p><small>Eliminação = 10 pts · Assistência = 5 pts</small></p><p>'+RANKS.map(r=>'<span style="color:'+r[2]+'">'+r[0]+' '+r[1]+'</span>').join(' · ')+'</p>');const lk=document.querySelector('[data-lk]');if(lk)lk.onclick=()=>{$('modal').style.display='none';A.link()};const bo=document.querySelector('[data-out]');if(bo)bo.onclick=()=>{if(I.tipo!=='Convidado'||confirm('Conta de convidado sem vínculo: sair pode perder o acesso. Vincule antes. Sair mesmo assim?'))A.logout()};const ba=document.querySelector('[data-aim]');if(ba)ba.onclick=()=>{P.setAim(!P.aim());PANELS.conta()};document.querySelector('[data-name]').onclick=()=>{const n=prompt('Novo nome',S.nome);if(n&&n.trim()){S.nome=n.trim().slice(0,14);save();hud();join();PANELS.conta()}}},
+ amigos(){const F=net.friends;modal('<h2>Amigos</h2>'+(F.length?F.map(f=>'<div class="row"><span>'+esc(f.name)+(f.online?' 🟢':' ⚪')+'</span><button class="btn" data-inv="'+esc(f.id)+'">CONVIDAR</button></div>').join(''):'<p>Nenhum amigo ainda.</p>')+'<div class="row"><input id="fi" placeholder="Nome do jogador" maxlength="14"><button class="btn" data-add>ADICIONAR</button></div>');document.querySelectorAll('[data-inv]').forEach(b=>b.onclick=()=>{emit('team-invite',{to:b.dataset.inv});toast('Convite enviado')});document.querySelector('[data-add]').onclick=()=>{const v=$('fi').value.trim();if(v){emit('friend-add',{name:v});toast('Pedido enviado')}}}
+};
+const MENU=[['jogar','JOGAR'],['ranqueada','RANQUEADA'],['classico','CLÁSSICO'],['treinamento','TREINAMENTO'],['personagem','PERSONAGEM'],['cofre','COFRE'],['loja','LOJA'],['eventos','EVENTOS'],['missoes','MISSÕES'],['amigos','AMIGOS'],['conta','ESTATÍSTICAS']];
+$('menu').innerHTML=MENU.map(m=>'<button class="btn" data-m="'+m[0]+'">'+m[1]+'</button>').join('');
+document.addEventListener('pointerdown',e=>{const b=e.target.closest('.btn,.go');if(!b)return;const r=b.getBoundingClientRect();b.style.setProperty('--x',(e.clientX-r.left)/r.width*100+'%');b.style.setProperty('--y',(e.clientY-r.top)/r.height*100+'%');b.classList.add('rip');setTimeout(()=>b.classList.remove('rip'),120);if(navigator.vibrate)navigator.vibrate(8)});
+$('menu').onclick=e=>{const m=e.target.closest('[data-m]');if(!m)return;const k=m.dataset.m;if(['ranqueada','classico','treinamento'].includes(k)){S.modo=k;save();hud();document.querySelectorAll('#menu [data-m]').forEach(x=>x.classList.toggle('sel',x.dataset.m===k));toast('Modo: '+MODES[k])}else if(k==='jogar')play();else PANELS[k]()};
+$('rank').onclick=PANELS.conta;
+function play(){if(P){P.play();return}const q=new URLSearchParams({modo:S.modo,nome:S.nome,skin:S.skin});location.href=GAME_URL+'?'+q}
+$('go').onclick=play;
+/* ===== Rede ===== */
+const net={friends:[],team:[],others:[]};let sock=null;
+function emit(ev,d){if(sock&&sock.connected)sock.emit(ev,d);else toast('Sem conexão com o servidor')}
+function join(){if(P){P.setName(S.nome);return}if(sock&&sock.connected)sock.emit('lobby-join',{name:S.nome,skin:S.skin,rank:rankOf()[0],pts:S.pts})}
+function netUI(on){$('net').className=on?'on':'';$('net').lastChild.textContent=on?'Online':'Offline'}
+function teamUI(){const m=net.team;let h='';for(let i=0;i<4;i++)h+='<div class="slot '+(i<m.length||i===0?'f':'')+'">'+(i===0?esc(S.nome)+' (você)':m[i]?esc(m[i].name):'+ Vaga livre')+'</div>';$('team').innerHTML=h}
+function chatMsg(n,t){const p=document.createElement('p');p.innerHTML='<b style="color:var(--cy)">'+esc(n)+':</b> '+esc(t);$('log').appendChild(p);$('log').scrollTop=1e5}
+function bridge(){const on=()=>netUI(!!(sock&&sock.connected));on();setInterval(on,1500);parent.__onRoom=a=>{net.others=(a||[]).slice(0,8);syncGhosts()};parent.__onRoom(P.names());
+ sock.on('friends-state',d=>{net.friends=d.friends||[]});sock.on('team-update',d=>{net.team=(d.members||[]).filter(m=>m.id!==sock.id).slice(0,3);teamUI()});sock.on('team-chat',d=>chatMsg(d.name,d.text))}
+try{if(P&&P.socket()){sock=P.socket();bridge()}else if(window.io){sock=io(SERVER_URL,{transports:['websocket','polling'],reconnectionDelayMax:4000});
+ sock.on('connect',()=>{netUI(true);join()});sock.on('disconnect',()=>{netUI(false);net.others=[];syncGhosts()});
+ sock.on('lobby-state',d=>{net.friends=d.friends||[];net.others=(d.players||[]).filter(p=>p.id!==sock.id).slice(0,8);syncGhosts()});
+ sock.on('team-update',d=>{net.team=(d.members||[]).filter(m=>m.id!==sock.id).slice(0,3);teamUI()});
+ sock.on('team-chat',d=>chatMsg(d.name,d.text))}}catch(e){}
+$('cf').onsubmit=e=>{e.preventDefault();const t=$('ci').value.trim();if(!t)return;chatMsg(S.nome,t);emit('team-chat',{name:S.nome,text:t});$('ci').value=''};
+/* ===== 3D ===== */
+const R=new THREE.WebGLRenderer({canvas:$('c'),antialias:false,powerPreference:'low-power'});R.setPixelRatio(Math.min(devicePixelRatio,1.5));
+const sc=new THREE.Scene();sc.background=new THREE.Color(0x070b1a);sc.fog=new THREE.Fog(0x070b1a,8,26);
+const cam=new THREE.PerspectiveCamera(38,1,.1,60);
+function resize(){R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.position.set(0,1.5,innerWidth<innerHeight?8.2:6.2);cam.lookAt(0,1.1,0);cam.updateProjectionMatrix()}
+addEventListener('resize',resize);
+sc.add(new THREE.HemisphereLight(0x6fa8ff,0x120a30,.9));
+const l1=new THREE.PointLight(0x19e6ff,2.2,12);l1.position.set(-3,2.5,2);sc.add(l1);const l2=new THREE.PointLight(0xff2e88,2.2,12);l2.position.set(3,2.5,2);sc.add(l2);
+const M=(c,e)=>new THREE.MeshStandardMaterial({color:c,roughness:.55,metalness:.3,emissive:e||0,emissiveIntensity:.6});
+const plat=new THREE.Mesh(new THREE.CylinderGeometry(1.6,1.8,.25,32),M(0x10183a));plat.position.y=-.12;sc.add(plat);
+const ring=new THREE.Mesh(new THREE.TorusGeometry(1.65,.04,8,48),new THREE.MeshBasicMaterial({color:0x19e6ff}));ring.rotation.x=Math.PI/2;sc.add(ring);
+const grid=new THREE.GridHelper(60,60,0xff2e88,0x1a2a6a);grid.position.y=-.26;sc.add(grid);
+for(let i=0;i<14;i++){const t=new THREE.Mesh(new THREE.BoxGeometry(.3,2+Math.random()*7,.3),new THREE.MeshBasicMaterial({color:i%2?0x19e6ff:0xff2e88}));const a=i/14*Math.PI*2;t.position.set(Math.cos(a)*14,t.geometry.parameters.height/2-.2,Math.sin(a)*14-4);sc.add(t)}
+function makeChar(sk){const g=new THREE.Group(),b=M(sk.b),a=M(sk.a,sk.a),d=M(0x1a2040);g.userData.b=b;g.userData.a=a;
+ const box=(w,h,d2,m,x,y,z)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d2),m);o.position.set(x,y,z);g.add(o);return o};
+ g.userData.legL=box(.28,.8,.3,d,-.17,.4,0);g.userData.legR=box(.28,.8,.3,d,.17,.4,0);
+ const torso=box(.7,.85,.4,b,0,1.2,0);g.userData.torso=torso;
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.28,14,10),M(0xe8c3a0));head.position.y=1.9;g.add(head);g.userData.head=head;
+ box(.46,.14,.1,a,0,1.93,.24);box(.5,.5,.2,a,0,1.25,-.3);
+ const arm=x=>{const p=new THREE.Group();p.position.set(x,1.55,0);const m=new THREE.Mesh(new THREE.BoxGeometry(.2,.75,.22),b);m.position.y=-.35;p.add(m);g.add(p);return p};
+ g.userData.armL=arm(-.46);g.userData.armR=arm(.46);return g}
+const hero=makeChar(SKINS[0]);sc.add(hero);
+let gunM=null;function gun(){if(gunM)hero.userData.armR.remove(gunM);const G=GUNS[S.gun];gunM=new THREE.Group();const m=new THREE.Mesh(new THREE.BoxGeometry(.1,.14,G.l),M(G.c,0x19e6ff));m.position.set(0,-.65,-G.l/2+.15);gunM.add(m);hero.userData.armR.add(gunM)}
+function paint(){const s=SKINS.find(x=>x.id===S.skin)||SKINS[0];hero.userData.b.color.setHex(s.b);hero.userData.a.color.setHex(s.a);hero.userData.a.emissive.setHex(s.a)}
+const lab=(t)=>{const c=document.createElement('canvas');c.width=256;c.height=64;const x=c.getContext('2d');x.fillStyle='#000a';x.fillRect(0,0,256,64);x.fillStyle='#fff';x.font='bold 30px system-ui';x.textAlign='center';x.fillText(t,128,42);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c)}));s.scale.set(1.4,.35,1);return s};
+let ghosts=[];function syncGhosts(){ghosts.forEach(g=>sc.remove(g));ghosts=net.others.map((p,i)=>{const sk=SKINS.find(s=>s.id===p.skin)||SKINS[i%SKINS.length],g=makeChar(sk),a=Math.PI*(.18+.64*(i%4)/3)+(i>3?Math.PI:0),r=i>3?5.2:3.4;g.scale.setScalar(.8);g.position.set(Math.cos(a)*r,0,-Math.sin(a)*r+(i>3?-1:0));g.rotation.y=Math.atan2(-g.position.x,-g.position.z+6)*0+.0;g.lookAt(0,0,6);const l=lab(p.name||'Jogador');l.position.y=2.6;g.add(l);sc.add(g);return g})}
+let vt=0,dragX=0,tgt=0;function victory(){vt=2.4}
+$('c').addEventListener('pointerdown',e=>{dragX=e.clientX;$('c').setPointerCapture(e.pointerId)});
+$('c').addEventListener('pointermove',e=>{if(e.buttons){tgt+=(e.clientX-dragX)*.012;dragX=e.clientX}});
+let t0=performance.now(),paused=false;document.addEventListener('visibilitychange',()=>{paused=document.hidden;t0=performance.now()});
+function loop(now){requestAnimationFrame(loop);if(paused)return;const dt=Math.min((now-t0)/1000,.05);t0=now;const t=now/1000,u=hero.userData;
+ hero.rotation.y+=(tgt-hero.rotation.y)*Math.min(1,dt*8);
+ if(vt>0){vt-=dt;const k=Math.sin(t*14);hero.position.y=Math.abs(Math.sin(t*6))*.35;u.armL.rotation.z=-2.6+k*.3;u.armR.rotation.z=2.6-k*.3;u.armR.rotation.x=0;tgt+=dt*4}
+ else{hero.position.y=0;u.armL.rotation.z=-.08+Math.sin(t*1.6)*.04;u.armR.rotation.z=.08-Math.sin(t*1.6)*.04;u.armR.rotation.x=-1.1;u.armL.rotation.x=0;u.torso.scale.y=1+Math.sin(t*1.8)*.015;u.head.position.y=1.9+Math.sin(t*1.8)*.012}
+ ghosts.forEach((g,i)=>{g.userData.torso.scale.y=1+Math.sin(t*1.8+i)*.015;g.userData.armL.rotation.z=-.1;g.userData.armR.rotation.z=.1});
+ ring.material.color.setHSL(.5+Math.sin(t*.8)*.06,1,.55);l1.position.x=-3+Math.sin(t*.7);l2.position.x=3-Math.sin(t*.7);
+ R.render(sc,cam)}
+resize();paint();gun();hud();teamUI();if(P)P.setName(S.nome);document.querySelector('[data-m="'+S.modo+'"]')?.classList.add('sel');requestAnimationFrame(loop);
+</script></body></html>
